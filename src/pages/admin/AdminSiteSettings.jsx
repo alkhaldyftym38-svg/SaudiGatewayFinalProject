@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, Bot, Loader2, Save, KeyRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bot, ImageIcon, KeyRound, Loader2, Save } from 'lucide-react';
+import ImageUploader from '../../components/ui/ImageUploader';
 import { useApp } from '../../context/AppContext';
+import {
+  DEFAULT_HOME_IMAGES,
+  HOME_IMAGE_KEYS,
+  resolveHomeImages,
+} from '../../lib/homeImages';
 import {
   fetchSiteSettings,
   maskSecret,
@@ -11,6 +17,8 @@ import {
 } from '../../lib/siteSettings';
 
 const LLM_KEYS = [SETTING_KEYS.GROQ_API_KEY, SETTING_KEYS.GROQ_MODEL];
+const HOME_KEYS = Object.values(HOME_IMAGE_KEYS);
+const ALL_KEYS = [...LLM_KEYS, ...HOME_KEYS];
 
 export default function AdminSiteSettings() {
   const { t } = useTranslation();
@@ -27,12 +35,13 @@ export default function AdminSiteSettings() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [model, setModel] = useState('llama-3.3-70b-versatile');
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [homeImages, setHomeImages] = useState(DEFAULT_HOME_IMAGES);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const map = await fetchSiteSettings(LLM_KEYS);
+      const map = await fetchSiteSettings(ALL_KEYS);
       const keyRow = map[SETTING_KEYS.GROQ_API_KEY];
       const modelRow = map[SETTING_KEYS.GROQ_MODEL];
       const keyVal = keyRow?.value?.trim() ?? '';
@@ -41,6 +50,11 @@ export default function AdminSiteSettings() {
       setModel(modelRow?.value?.trim() || 'llama-3.3-70b-versatile');
       setUpdatedAt(keyRow?.updated_at || modelRow?.updated_at || null);
       setApiKeyInput('');
+      const valueByKey = {};
+      for (const k of HOME_KEYS) {
+        valueByKey[k] = map[k]?.value ?? '';
+      }
+      setHomeImages(resolveHomeImages(valueByKey));
     } catch (e) {
       setError(e?.message || (ar ? 'تعذر تحميل الإعدادات' : 'Could not load settings'));
     } finally {
@@ -67,6 +81,9 @@ export default function AdminSiteSettings() {
         return;
       }
       await upsertSiteSetting(SETTING_KEYS.GROQ_MODEL, model.trim() || 'llama-3.3-70b-versatile');
+      await upsertSiteSetting(HOME_IMAGE_KEYS.HERO_SIDE, homeImages.heroSide.trim());
+      await upsertSiteSetting(HOME_IMAGE_KEYS.HERITAGE, homeImages.heritage.trim());
+      await upsertSiteSetting(HOME_IMAGE_KEYS.RIYADH, homeImages.riyadh.trim());
       setSuccess(true);
       setApiKeyInput('');
       await load();
@@ -77,9 +94,13 @@ export default function AdminSiteSettings() {
     }
   };
 
+  const setHomeField = (field, url) => {
+    setHomeImages((prev) => ({ ...prev, [field]: url }));
+  };
+
   return (
     <div className="min-h-screen bg-surface pt-24 pb-16 px-4 sm:px-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <Link
           to="/admin"
           className="inline-flex items-center gap-2 text-sm font-semibold text-on-surface-variant hover:text-primary mb-6 transition-colors"
@@ -104,6 +125,50 @@ export default function AdminSiteSettings() {
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6">
+            <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/15 shadow-card p-6 space-y-5">
+              <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                <ImageIcon className="w-4 h-4" />
+                {t('adminSite.homeSection')}
+              </div>
+              <p className="text-xs text-on-surface-variant">{t('adminSite.homeHint')}</p>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <ImageUploader
+                    label={t('adminSite.homeHero')}
+                    ar={ar}
+                    value={homeImages.heroSide}
+                    onChange={(url) => setHomeField('heroSide', url)}
+                  />
+                  <div className="rounded-xl overflow-hidden border border-outline-variant/20 aspect-[4/3] bg-surface-container">
+                    <img src={homeImages.heroSide} alt="" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <ImageUploader
+                    label={t('adminSite.homeHeritage')}
+                    ar={ar}
+                    value={homeImages.heritage}
+                    onChange={(url) => setHomeField('heritage', url)}
+                  />
+                  <div className="rounded-xl overflow-hidden border border-outline-variant/20 aspect-[4/3] bg-surface-container">
+                    <img src={homeImages.heritage} alt="" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <div className="space-y-3 sm:col-span-2">
+                  <ImageUploader
+                    label={t('adminSite.homeRiyadh')}
+                    ar={ar}
+                    value={homeImages.riyadh}
+                    onChange={(url) => setHomeField('riyadh', url)}
+                  />
+                  <div className="rounded-xl overflow-hidden border border-outline-variant/20 aspect-[21/9] max-h-48 bg-surface-container">
+                    <img src={homeImages.riyadh} alt="" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/15 shadow-card p-6 space-y-5">
               <div className="flex items-center gap-2 text-primary font-bold text-sm">
                 <Bot className="w-4 h-4" />

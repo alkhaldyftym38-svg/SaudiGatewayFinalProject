@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -7,18 +8,23 @@ import {
 } from 'lucide-react';
 import AIAssistant from '../components/ai/AIAssistant';
 import { useApp } from '../context/AppContext';
+import { DEFAULT_HOME_IMAGES, fetchHomeImages } from '../lib/homeImages';
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 
-const IMG = {
-  heritage: 'https://images.unsplash.com/photo-1586183189334-8c4d40c6cb87?w=900&q=80',
-  heroSide: 'https://images.unsplash.com/photo-1578894382863-2fa7fd8e50f1?w=800&q=80',
-  riyadh: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=900&q=80',
-};
-
 export default function Home() {
   const { t } = useTranslation();
-  const { isRTL, language } = useApp();
+  const { isRTL, language, tabResumeCount } = useApp();
+  const [img, setImg] = useState(DEFAULT_HOME_IMAGES);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const next = await fetchHomeImages();
+      if (!cancelled) setImg(next);
+    })();
+    return () => { cancelled = true; };
+  }, [tabResumeCount]);
   const s = (k) => t(`stitch.${k}`);
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   const Chevron = ChevronRight;
@@ -130,7 +136,12 @@ export default function Home() {
               isRTL ? 'left-[-4%]' : 'right-[-4%]'
             }`}
           >
-            <img src={IMG.heroSide} alt="" className="w-full h-full object-cover" />
+            <img
+              src={img.heroSide}
+              alt={language === 'ar' ? 'العُلا والتراث السعودي' : 'Al-Ula and Saudi heritage'}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
           </div>
         </section>
@@ -166,9 +177,10 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-[minmax(280px,auto)]">
             <div className="lg:col-span-8 bg-surface-container-lowest rounded-3xl overflow-hidden relative group shadow-card min-h-[320px]">
               <img
-                src={IMG.heritage}
-                alt=""
+                src={img.heritage}
+                alt={language === 'ar' ? 'واحة الأحساء' : 'Al-Ahsa Oasis'}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-on-surface/85 via-on-surface/25 to-transparent p-8 sm:p-12 flex flex-col justify-end">
                 <div className="max-w-md">
@@ -220,9 +232,10 @@ export default function Home() {
 
             <div className="lg:col-span-8 bg-surface-container-highest rounded-3xl overflow-hidden relative group shadow-card min-h-[300px]">
               <img
-                src={IMG.riyadh}
-                alt=""
+                src={img.riyadh}
+                alt={language === 'ar' ? 'الرياض' : 'Riyadh skyline'}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-black/45 p-8 sm:p-12 flex flex-col justify-end">
                 <div className="max-w-md">

@@ -5,6 +5,8 @@ export const SETTING_KEYS = {
   GROQ_MODEL: 'groq_model',
 };
 
+export { HOME_IMAGE_KEYS, DEFAULT_HOME_IMAGES } from './homeImages';
+
 export function maskSecret(value) {
   if (!value || typeof value !== 'string') return '';
   const v = value.trim();
