@@ -7,7 +7,6 @@ export const HOME_IMAGE_KEYS = {
 };
 
 export const DEFAULT_HOME_IMAGES = {
-  heroSide: 'https://images.unsplash.com/photo-1503249023995-51b0f3778ccf?auto=format&fit=crop&w=1200&q=80',
   heritage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
   riyadh: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=1200&q=80',
 };
@@ -19,8 +18,12 @@ export function resolveHomeImages(valueByKey) {
     const v = valueByKey?.[key];
     return typeof v === 'string' && v.trim() ? v.trim() : fallback;
   };
+  const pickOptional = (key) => {
+    const v = valueByKey?.[key];
+    return typeof v === 'string' && v.trim() ? v.trim() : '';
+  };
   return {
-    heroSide: pick(HOME_IMAGE_KEYS.HERO_SIDE, DEFAULT_HOME_IMAGES.heroSide),
+    heroSide: pickOptional(HOME_IMAGE_KEYS.HERO_SIDE),
     heritage: pick(HOME_IMAGE_KEYS.HERITAGE, DEFAULT_HOME_IMAGES.heritage),
     riyadh: pick(HOME_IMAGE_KEYS.RIYADH, DEFAULT_HOME_IMAGES.riyadh),
   };
@@ -35,7 +38,7 @@ export async function fetchHomeImages() {
 
   if (error) {
     console.warn('fetchHomeImages', error.message);
-    return DEFAULT_HOME_IMAGES;
+    return resolveHomeImages({});
   }
 
   const map = {};

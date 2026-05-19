@@ -8,14 +8,14 @@ import {
 } from 'lucide-react';
 import AIAssistant from '../components/ai/AIAssistant';
 import { useApp } from '../context/AppContext';
-import { DEFAULT_HOME_IMAGES, fetchHomeImages } from '../lib/homeImages';
+import { fetchHomeImages, resolveHomeImages } from '../lib/homeImages';
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 
 export default function Home() {
   const { t } = useTranslation();
   const { isRTL, language, tabResumeCount } = useApp();
-  const [img, setImg] = useState(DEFAULT_HOME_IMAGES);
+  const [img, setImg] = useState(() => resolveHomeImages({}));
 
   useEffect(() => {
     let cancelled = false;
@@ -131,19 +131,21 @@ export default function Home() {
               </motion.div>
             </motion.div>
           </div>
-          <div
-            className={`absolute top-[10%] w-[42%] h-[75%] rounded-3xl overflow-hidden shadow-2xl rotate-3 hidden xl:block ${
-              isRTL ? 'left-[-4%]' : 'right-[-4%]'
-            }`}
-          >
-            <img
-              src={img.heroSide}
-              alt={language === 'ar' ? 'العُلا والتراث السعودي' : 'Al-Ula and Saudi heritage'}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
-          </div>
+          {img.heroSide ? (
+            <div
+              className={`absolute top-[10%] w-[42%] h-[75%] rounded-3xl overflow-hidden shadow-2xl rotate-3 hidden xl:block ${
+                isRTL ? 'left-[-4%]' : 'right-[-4%]'
+              }`}
+            >
+              <img
+                src={img.heroSide}
+                alt={language === 'ar' ? 'العُلا والتراث السعودي' : 'Al-Ula and Saudi heritage'}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
+            </div>
+          ) : null}
         </section>
         <section id="ai-assistant" className="lg:hidden mb-12">
           <div className="flex justify-end mb-2">
