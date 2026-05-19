@@ -1,0 +1,7 @@
+# https://supabase.com/docs/guides/cli/config
+
+[functions.send-support-reply]
+verify_jwt = true
+
+[functions.assistant-chat]
+verify_jwt = false
